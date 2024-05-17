@@ -3,9 +3,9 @@ import { CustomRequest } from "../middleware/auth"
 const prisma = new PrismaClient()
 
 
-export const addFriend = async(req,res) =>{
-    // const userId = req.user
-    const {friendId , userId} = req.body
+export const addFriend = async(req:CustomRequest,res) =>{
+    const userId = req.user?.id
+    const {friendId} = req.body
     const user = await prisma.user.findUnique({
         where:{
             id:userId
@@ -41,36 +41,40 @@ export const addFriend = async(req,res) =>{
 }
 
 export const getAllUserFriends = async(req:CustomRequest,res) =>{
-    const {id} = req.user
-    const user = await prisma.user.findUnique({
-        where:{
-            id:id
-        }
-    })
-    if(!user){
-        return res.status(400).json({
-            msg:"user not found"
-        })
-    }
-    
-    const friends = await prisma.friendship.findMany({
-        where:{
-            userId:id
-        },
-       select:{
-        friend:{
-            select:{
-                id:true,
-                username:true
+    const userId = req.user?.id
+    try {
+        const user = await prisma.user.findUnique({
+            where:{
+                id:userId
             }
+        })
+        if(!user){
+            return res.status(400).json({
+                msg:"user not found"
+            })
         }
-       }
-    })
-
-    res.status(200).json({
-        msg:"success",
-        friends
-
-    })
+        
+        const friends = await prisma.friendship.findMany({
+            where:{
+                userId:userId
+            },
+           select:{
+            friend:{
+                select:{
+                    id:true,
+                    username:true
+                }
+            }
+           }
+        })
+    
+        res.status(200).json({
+            msg:"success",
+            friends
+    
+        })
+    } catch (error:any) {
+        console.log(error.message)
+    }
 
 }
