@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client"
 import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
 import { CustomRequest } from "../middleware/auth"
 const prisma = new PrismaClient()
 
@@ -21,11 +22,12 @@ export const registerUser = async(req,res)=>{
             },
             process.env.TOKEN_SECRET
         )
+      const hashedPassword = bcrypt.hashSync(password, 10);
       const registeredUser =  await prisma.user.create({
             data:{
                 username:username,
                 email:email,
-                password:password,
+                password:hashedPassword,
                 token:token
             }
         })
@@ -42,12 +44,14 @@ export const registerUser = async(req,res)=>{
 }
 
 export const loginUser = async(req,res) =>{
-    const {username , email ,password} = req.body
+    const {credential ,password} = req.body
     
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
         where:{
-            username:username,
-            email:email
+            OR:[
+              {  username:credential},
+              {  email:credential}
+            ]
         }
     })
 
@@ -56,14 +60,14 @@ export const loginUser = async(req,res) =>{
             msg:"User not found"
         })
     }
-    if(!(user.password === password)){
+    if(!(bcrypt.compareSync(password, user.password))){
         return res.status(404).json({
             msg:"password is incorrect"
         })
     }
     res.status(200).json({
         msg:"logged in succussfully",
-        loggedIn : true
+        token : user.token
     })
 }
 
