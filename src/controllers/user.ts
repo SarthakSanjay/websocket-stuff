@@ -61,6 +61,7 @@ export const loginUser = async(req,res) =>{
         })
     }
     if(!(bcrypt.compareSync(password, user.password))){
+        console.log(bcrypt.compareSync(password, user.password));
         return res.status(404).json({
             msg:"password is incorrect"
         })
@@ -85,4 +86,105 @@ export const getAllUser = async(req :CustomRequest,res) =>{
         msg:"success",
         allUser
     })
+}
+
+export const getUserDetails = async(req:CustomRequest, res)=>{
+    try {
+        const userId = req.user?.id
+        const user = await prisma.user.findUnique({
+            where:{id : userId},
+            select:{
+                id:true,
+                username: true,
+                email:true,
+            }
+        })
+        if(!user){
+            return res.status(404).json({
+                msg:"user doesn't exist"
+            })
+        }
+        res.status(200).json({
+            user
+        })
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
+export const updateUserDetail = async(req:CustomRequest , res)=>{
+    try {
+        const userId = req.user?.id
+        const {fieldToUpdate,value, newPassword} = req.body
+        // if(!fieldToUpdate || !value || !newPassword){
+        //     return res.status(404).json({
+        //         msg:'fields missing'
+        //     })
+        // }
+        console.log(fieldToUpdate,',',value,',',newPassword);
+
+        if(fieldToUpdate === 'password'){
+
+        const user = await prisma.user.findUnique({
+            where:{
+                id:userId
+            }
+        })
+        if(!user){
+            return res.status(404).json({msg:'cannot find user'})
+        }
+        const isPasswordValid = bcrypt.compareSync(value , user.password)
+        if(!isPasswordValid){
+            return res.status(404).json({msg:'password is incorrect'})
+        }
+
+        const newPasswordHash = bcrypt.hashSync(newPassword , 10)
+         await prisma.user.update({
+            where:{id:userId},
+            data:{
+                password:newPasswordHash
+            }
+        })
+        res.status(200).json({
+            msg: `updated user ${fieldToUpdate}`
+        })
+        }
+        
+        await prisma.user.update({
+            where:{id:userId},
+            data:{
+                [fieldToUpdate]:value
+            }
+        })
+        res.status(200).json({
+            msg: `updated user ${fieldToUpdate}`
+        })
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
+export const searchUser = async(req,res)=>{
+    try {
+        const {search} = req.query
+        const users = await prisma.user.findMany({
+            where:{
+                OR:[
+                   {username:{contains: search , mode:"insensitive"}},
+                   {email:{contains: search , mode:'insensitive'}}, 
+                ]
+            },
+            select:{
+                id:true,
+                email:true,
+                username:true
+            }
+        })
+
+        res.status(200).json({
+            users
+        })
+    } catch (error) {
+        console.log(error.message)
+    }
 }
