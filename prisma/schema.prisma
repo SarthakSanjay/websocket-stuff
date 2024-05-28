@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
 }
 
 datasource db {
@@ -25,12 +26,15 @@ model User {
   receivedMessages Message[] @relation("ReceivedMessages")
   user Friendship[] @relation("user")
   friend Friendship[] @relation("friend")
+  sentFriendRequests FriendRequest[] @relation("SentFriendRequests")
+  receivedFriendRequests FriendRequest[] @relation("ReceivedFriendRequests")
 }
 
 model Friendship {
   id Int @id @default(autoincrement())
-  userId Int
-  friendId Int
+  userId Int @unique
+  friendId Int @unique
+  friendshipEstablished Boolean @default(false)
   user User @relation("user", fields: [userId], references: [id])
   friend User @relation("friend", fields: [friendId], references: [id])
   createdAt DateTime @default(now())
@@ -45,4 +49,15 @@ model Message {
   receiver User @relation("ReceivedMessages",fields: [receiverId] , references: [id])
   createdAt DateTime @default(now())
 
+}
+
+model FriendRequest {
+  id Int @id @default(autoincrement())
+  userId Int
+  friendId Int
+  user User @relation("SentFriendRequests", fields: [userId], references: [id])
+  friend User @relation("ReceivedFriendRequests", fields: [friendId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, friendId])
 }
