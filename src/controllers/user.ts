@@ -2,45 +2,69 @@ import { PrismaClient } from "@prisma/client"
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import { CustomRequest } from "../middleware/auth"
+import dns from 'dns/promises'
+
 const prisma = new PrismaClient()
 
 export const registerUser = async(req,res)=>{
-    const {username , email , password} = req.body
-    
-    const user = await prisma.user.findUnique({
-        where:{
-            email:email,
-            username:username
-        }
-    })
+  try {
+      const {username , email , password} = req.body
+  
+      // Validate email format
+      const domain = email.split('@')[1];
+      let validDomain;
+      let validEmail;
 
-    if(!user){
-        const token = jwt.sign(
-            {
-                username: username,
-                email:email
-            },
-            process.env.TOKEN_SECRET
-        )
-      const hashedPassword = bcrypt.hashSync(password, 10);
-      const registeredUser =  await prisma.user.create({
-            data:{
-                username:username,
-                email:email,
-                password:hashedPassword,
-                token:token
-            }
-        })
+      try {
+          validEmail = await dns.resolveMx(domain);
+          validDomain = validEmail && validEmail.length > 0;
+      } catch (err) {
+          validDomain = false;
+      }
 
-       return res.status(200).json({
-            msg:"user registered successfully",
-            registeredUser
-        })
-    }
-
-    res.status(409).json({
-        msg:"User already exists"
-    })
+      if (!validDomain) {
+          return res.status(409).json({
+              msg: "Invalid domain"
+          });
+      }
+      
+      const user = await prisma.user.findUnique({
+          where:{
+              email:email,
+              username:username
+          }
+      })
+  
+      if(!user){
+          const token = jwt.sign(
+              {
+                  username: username,
+                  email:email
+              },
+              process.env.TOKEN_SECRET
+          )
+        const hashedPassword = bcrypt.hashSync(password, 10);
+        const registeredUser =  await prisma.user.create({
+              data:{
+                  username:username,
+                  email:email,
+                  password:hashedPassword,
+                  token:token
+              }
+          })
+  
+         return res.status(200).json({
+              msg:"user registered successfully",
+              registeredUser
+          })
+      }
+  
+      res.status(409).json({
+          msg:"User already exists"
+      })
+  } catch (error) {
+    console.log(error.message)
+  }
 }
 
 export const loginUser = async(req,res) =>{
