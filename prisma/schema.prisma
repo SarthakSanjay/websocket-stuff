@@ -32,12 +32,14 @@ model User {
 
 model Friendship {
   id Int @id @default(autoincrement())
-  userId Int @unique
-  friendId Int @unique
+  userId Int 
+  friendId Int 
   friendshipEstablished Boolean @default(false)
   user User @relation("user", fields: [userId], references: [id])
   friend User @relation("friend", fields: [friendId], references: [id])
   createdAt DateTime @default(now())
+
+    @@unique([userId, friendId])
 }
 
 model Message {
@@ -53,11 +55,11 @@ model Message {
 
 model FriendRequest {
   id Int @id @default(autoincrement())
-  userId Int
-  friendId Int
-  user User @relation("SentFriendRequests", fields: [userId], references: [id])
-  friend User @relation("ReceivedFriendRequests", fields: [friendId], references: [id])
+  senderId Int
+  ReceiverId Int
+  sender User @relation("SentFriendRequests", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedFriendRequests", fields: [ReceiverId], references: [id])
   createdAt DateTime @default(now())
 
-  @@unique([userId, friendId])
+  @@unique([senderId, ReceiverId])
 }
