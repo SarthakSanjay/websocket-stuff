@@ -112,7 +112,7 @@ export const getAllUser = async(req :CustomRequest,res) =>{
     })
 }
 
-export const getUserDetails = async(req:CustomRequest, res)=>{
+export const getAdminDetails = async(req:CustomRequest, res)=>{
     try {
         const userId = req.user?.id
         const user = await prisma.user.findUnique({
@@ -207,6 +207,30 @@ export const searchUser = async(req,res)=>{
 
         res.status(200).json({
             users
+        })
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
+export const getUserDetails = async(req, res)=>{
+    try {
+        const userId = parseInt(req.params.id)
+        const user = await prisma.user.findUnique({
+            where:{id : userId},
+            select:{
+                id:true,
+                username: true,
+                email:true,
+            }
+        })
+        if(!user){
+            return res.status(404).json({
+                msg:"user doesn't exist"
+            })
+        }
+        res.status(200).json({
+            user
         })
     } catch (error) {
         console.log(error.message)
