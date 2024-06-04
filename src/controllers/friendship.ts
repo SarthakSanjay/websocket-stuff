@@ -118,6 +118,13 @@ export const acceptFriendReq = async(req:CustomRequest , res) =>{
                 friendshipEstablished:true
             }
         })
+        await prisma.friendship.create({
+            data:{
+                userId:friendId,
+                friendId:userId,
+                friendshipEstablished:true
+            }
+        })
         const friendReq = await prisma.friendRequest.findFirst({
             where:{
                 ReceiverId:userId,
