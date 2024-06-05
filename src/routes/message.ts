@@ -1,7 +1,7 @@
 import express from 'express'
-import { directMessage } from '../controllers/message'
+import { getChatMessages } from '../controllers/message'
+import { authMiddleware } from '../middleware/auth'
 const router = express.Router()
 
-router.route('/').post(directMessage)
-
+router.route('/chat/:id').get(authMiddleware, getChatMessages)
 export default router
