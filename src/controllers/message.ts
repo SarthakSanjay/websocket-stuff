@@ -17,7 +17,8 @@ export const getChatMessages = async(req:CustomRequest ,res)=>{
                 id:true,
                 senderId: true,
                 receiverId: true,
-                text: true
+                text: true,
+                createdAt:true
             }
             ,
             orderBy:{
@@ -30,6 +31,27 @@ export const getChatMessages = async(req:CustomRequest ,res)=>{
     } catch (error) {
         res.status(404).json({
             msg:'unexpected error'
+        })
+    }
+}
+
+export const deleteMessage = async(req:CustomRequest , res)=>{
+    const {messageIds} = req.body
+    try {
+        const deletedMessage = await prisma.message.deleteMany({
+           where:{
+            id: {
+                in : messageIds
+            }
+           }
+        })
+        res.status(200).json({
+            msg:'messages deleted successfully',
+            deleteMessage
+        })
+    } catch (error) {
+        res.status(404).json({
+            msg:'unexpected error while deleting messages'
         })
     }
 }
