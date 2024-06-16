@@ -44,13 +44,21 @@ model Friendship {
 
 model Message {
   id Int @id @default(autoincrement())
-  text String
+  data String?
+  messageType MessageType @default(TEXT)
   senderId Int
   sender User @relation("SentMessages",fields: [senderId] , references: [id])
   receiverId Int
   receiver User @relation("ReceivedMessages",fields: [receiverId] , references: [id])
   createdAt DateTime @default(now())
 
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VOICE
+  VIDEO
 }
 
 model FriendRequest {
