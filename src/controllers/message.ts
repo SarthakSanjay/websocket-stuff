@@ -17,7 +17,8 @@ export const getChatMessages = async(req:CustomRequest ,res)=>{
                 id:true,
                 senderId: true,
                 receiverId: true,
-                text: true,
+                data: true,
+                messageType: true,
                 createdAt:true
             }
             ,
