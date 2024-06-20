@@ -4,15 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsc -b && nodemon dist/index.js"
+    "start:express": "tsc -b && nodemon dist/index.js",
+    "start:ws": "tsc -b && nodemon dist/wsServer.js",
+    "start:both": "concurrently \"npm run start:express\" \"npm run start:ws\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.598.0",
+    "@aws-sdk/s3-request-presigner": "^3.598.0",
     "@prisma/client": "^5.13.0",
     "@types/express": "^4.17.21",
-    "@types/ws": "^8.5.10",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "express": "^4.19.2",
@@ -25,6 +28,7 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.12.11",
     "@types/uuid": "^9.0.8",
+    "concurrently": "^8.2.2",
     "nodemon": "^3.1.0",
     "prisma": "^5.13.0",
     "ts-node": "^10.9.2",
