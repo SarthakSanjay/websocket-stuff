@@ -121,6 +121,7 @@ export const getAdminDetails = async(req:CustomRequest, res)=>{
                 id:true,
                 username: true,
                 email:true,
+                profileImageUrl:true
             }
         })
         if(!user){
@@ -147,16 +148,18 @@ export const updateUserDetail = async(req:CustomRequest , res)=>{
         // }
         console.log(fieldToUpdate,',',value,',',newPassword);
 
-        if(fieldToUpdate === 'password'){
-
         const user = await prisma.user.findUnique({
             where:{
                 id:userId
             }
         })
+
         if(!user){
             return res.status(404).json({msg:'cannot find user'})
         }
+
+        if(fieldToUpdate === 'password'){
+
         const isPasswordValid = bcrypt.compareSync(value , user.password)
         if(!isPasswordValid){
             return res.status(404).json({msg:'password is incorrect'})
@@ -169,11 +172,24 @@ export const updateUserDetail = async(req:CustomRequest , res)=>{
                 password:newPasswordHash
             }
         })
-        res.status(200).json({
+        return res.status(200).json({
             msg: `updated user ${fieldToUpdate}`
         })
         }
-        
+        if(fieldToUpdate === 'profileImageUrl'){
+            let url =  `https://sharko-bucket.s3.ap-south-1.amazonaws.com/images/${value}`
+            await prisma.user.update({
+                where:{id:userId},
+                data:{
+                    [fieldToUpdate]:url
+                }
+            })
+            
+            return res.status(200).json({
+                msg: `updated user ${fieldToUpdate}`
+                
+            })
+        }
         await prisma.user.update({
             where:{id:userId},
             data:{
@@ -182,6 +198,7 @@ export const updateUserDetail = async(req:CustomRequest , res)=>{
         })
         res.status(200).json({
             msg: `updated user ${fieldToUpdate}`
+            
         })
     } catch (error) {
         console.log(error.message)
@@ -201,7 +218,8 @@ export const searchUser = async(req,res)=>{
             select:{
                 id:true,
                 email:true,
-                username:true
+                username:true,
+                profileImageUrl:true
             }
         })
 
@@ -213,24 +231,53 @@ export const searchUser = async(req,res)=>{
     }
 }
 
-export const getUserDetails = async(req, res)=>{
+export const getUserDetails = async(req:CustomRequest, res)=>{
     try {
-        const userId = parseInt(req.params.id)
+        const userId = req?.user.id
+        const friendId = parseInt(req.params.id)
         const user = await prisma.user.findUnique({
-            where:{id : userId},
+            where:{id : friendId},
             select:{
                 id:true,
                 username: true,
                 email:true,
+                profileImageUrl:true,
+
             }
         })
+
+        const mediaImages = await prisma.message.findMany({
+            where:{
+                OR:[
+                    {senderId:userId ,receiverId:friendId , messageType: 'IMAGE'},
+                    {senderId:friendId ,receiverId:userId , messageType: 'IMAGE'}
+                ]
+            }
+        })
+        const mediaAudio = await prisma.message.findMany({
+            where:{
+                OR:[
+                    {senderId:userId ,receiverId:friendId , messageType: 'AUDIO'},
+                    {senderId:friendId ,receiverId:userId , messageType: 'AUDIO'}
+                ]
+            }
+        })
+        const mediaVideo = await prisma.message.findMany({
+            where:{
+                OR:[
+                    {senderId:userId ,receiverId:friendId , messageType: 'VIDEO'},
+                    {senderId:friendId ,receiverId:userId , messageType: 'VIDEO'}
+                ]
+            }
+        })
+
         if(!user){
             return res.status(404).json({
                 msg:"user doesn't exist"
             })
         }
         res.status(200).json({
-            user
+            user , mediaImages , mediaAudio , mediaVideo
         })
     } catch (error) {
         console.log(error.message)
