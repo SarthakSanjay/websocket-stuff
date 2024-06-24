@@ -63,7 +63,8 @@ export const getAllUserFriends = async(req:CustomRequest,res) =>{
             friend:{
                 select:{
                     id:true,
-                    username:true
+                    username:true,
+                    profileImageUrl:true
                 }
             }
            }
