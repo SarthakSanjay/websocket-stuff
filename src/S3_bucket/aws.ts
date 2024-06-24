@@ -21,7 +21,7 @@ export async function getObjectUrl(key:any){
 export async function putObject(filename:string , contentType: string) {
     const command = new PutObjectCommand({
         Bucket: 'sharko-bucket',
-        Key: `images/${filename}`,
+        Key: `${contentType.split('/')[0]}s/${filename}`,
         ContentType: contentType
     })
 
@@ -29,20 +29,3 @@ export async function putObject(filename:string , contentType: string) {
     return url
     
 }
-
-async function listObject() {
-    const command = new ListObjectsV2Command({
-        Bucket: 'sharko-bucket',
-        Prefix: '/'
-    })
-    const result = await s3client.send(command)
-    console.log(result);
-}
-
-
-// async function init(){
-//     const url = await getObjectUrl('images/image-1718899785421.png')
-//     console.log(url);
-// }
-
-// init()
