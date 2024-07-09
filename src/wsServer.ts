@@ -35,7 +35,7 @@ wss.on("connection", (connection: CustomWebSocket, req) => {
     }
 
     if (messageType !== "TEXT") {
-      let url = `https://sharko-bucket.s3.ap-south-1.amazonaws.com/${
+      let url = `${process.env.BUCKET_URL}/${
         contentType.split("/")[0]
       }s/${filename}.${contentType.split("/")[1]}`;
 
